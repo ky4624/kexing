@@ -54,38 +54,56 @@ def _get_mock_response(prompt: str) -> str:
     if "判断意图类型" in prompt:
         return '{"type": "A"}'
     elif "提取以下字段的值" in prompt:
-        # 从用户输入中提取关键词
-        if "app" in prompt.lower() or "应用" in prompt:
-            return '{"product": "健身APP", "audience": null, "tone": null, "style": null, "language": null, "duration": null}'
-        elif "年轻人" in prompt or "学生" in prompt or "上班族" in prompt:
-            return '{"product": null, "audience": "年轻人", "tone": null, "style": null, "language": null, "duration": null}'
-        elif "专业" in prompt or "科技感" in prompt or "快节奏" in prompt:
-            return '{"product": null, "audience": null, "tone": "专业可信", "style": null, "language": null, "duration": null}'
-        elif "写实" in prompt or "动画" in prompt or "电影感" in prompt:
-            return '{"product": null, "audience": null, "tone": null, "style": "电影感", "language": null, "duration": null}'
-        elif "中文" in prompt or "英文" in prompt:
-            return '{"product": null, "audience": null, "tone": null, "style": null, "language": "中文", "duration": null}'
-        elif "10秒" in prompt:
-            return '{"product": null, "audience": null, "tone": null, "style": null, "language": null, "duration": "10秒"}'
-        elif "15秒" in prompt:
-            return '{"product": null, "audience": null, "tone": null, "style": null, "language": null, "duration": "15秒"}'
-        else:
-            return '{"product": null, "audience": null, "tone": null, "style": null, "language": null, "duration": null}'
+        # 尝试从用户输入中提取推广对象
+        user_input_match = re.search(r'用户输入：(.*)', prompt, re.DOTALL)
+        if user_input_match:
+            user_input = user_input_match.group(1).strip()
+            if user_input:
+                # 简单的产品名称提取：使用用户输入的前几个词作为产品名称
+                # 这种方法虽然简单，但比固定返回null要好
+                return f'{{"product": "{user_input}", "audience": null, "tone": null, "style": null, "language": null, "duration": null}}'
+        return '{"product": null, "audience": null, "tone": null, "style": null, "language": null, "duration": null}'
     elif "是否已包含明确的核心功能" in prompt:
         return '{"needs_core_function": true, "reason": "产品描述不够具体"}'
     else:
-        # 模拟脚本生成
-        return '''[0-2s] 【黑屏白字，低沉男声】
-"投资人只看前3页...你的BP撑得住吗？"
+        # 动态生成模拟脚本
+        # 尝试从prompt中提取用户输入的产品信息
+        product_name = "产品"
+        audience = "用户"
+        core_feature = "核心功能"
+        
+        # 从prompt中提取产品名称
+        product_match = re.search(r'推广对象：(.*?)[\n\r，。,]', prompt, re.DOTALL)
+        if product_match:
+            product_name = product_match.group(1).strip()
+        else:
+            # 如果没有明确的"推广对象："标记，尝试提取第一个可能的产品名称
+            general_product_match = re.search(r'"(.*?)"', prompt)
+            if general_product_match:
+                product_name = general_product_match.group(1).strip()
+        
+        # 从prompt中提取目标受众
+        audience_match = re.search(r'目标受众：(.*?)[\n\r，。,]', prompt, re.DOTALL)
+        if audience_match:
+            audience = audience_match.group(1).strip()
+        
+        # 从prompt中提取核心功能
+        feature_match = re.search(r'核心功能：(.*?)[\n\r，。,]', prompt, re.DOTALL)
+        if feature_match:
+            core_feature = feature_match.group(1).strip()
+        
+        # 生成动态脚本
+        return f'''[0-2s] 【黑屏白字，磁性男声】
+"{audience}最需要的是什么？"{product_name}给你答案！
 
-[2-5s] 【快速剪辑：CEO熬夜改PPT、被拒邮件特写】
-"90%的创业计划书，还没讲清价值就被关掉。"
+[2-5s] 【快速剪辑：{audience}使用{product_name}的场景、痛点解决瞬间】
+"生活/工作中的困扰，{product_name}轻松帮你搞定。"
 
-[5-9s] 【镜头拉远：QAI界面自动生成精美BP，数据流动】
-"QAI创业助手——AI 5分钟生成投资人认可的商业计划书。"
+[5-9s] 【镜头聚焦：{product_name}界面展示，{core_feature}功能演示】
+"{product_name}——专为{audience}打造的解决方案，{core_feature}让体验更出色！"
 
-[9-12s] 【LOGO墙：红杉、真格等+用户证言弹幕】
-"上线3个月，8,327位创始人选择，平均融资提升40%。"
+[9-12s] 【数据可视化：用户数量增长、满意度评分，配合用户证言】
+"已有10,000+用户选择，满意度高达95%！"
 
-[12-15s] 【CTA按钮放大，二维码浮现，鼓点重音】
-"立即扫码，免费生成你的第一份AI BP！🚀"'''
+[12-15s] 【CTA按钮放大，行动指令清晰，背景音乐高潮】
+"立即行动，体验{product_name}带来的全新改变！🚀"'''
